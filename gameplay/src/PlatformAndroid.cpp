@@ -1,5 +1,37 @@
 #ifdef __ANDROID__
 
+/*
+ 
+ I have modified this class to allow gamepad events instead of polling.
+ This was done for ethe Triv VS game. In some multiplayer cases event based
+ is preferable.
+ 
+ Use in Game class:
+ 
+ Game.h
+ 
+ bool gamepadShouldOverridePolling();
+ void gamepadAxisEvent(int device, float x, float y, float z, float rz, float hatx, float haty, float trigl, float trigr);
+ void gamepadButtonEvent(int device, Gamepad::ButtonEvent evt, int code);
+ 
+ Game.cpp
+ 
+ bool Game::gamepadShouldOverridePolling() {
+    return true;
+ }
+ void Game::gamepadAxisEvent(int device, float x, float y, float z, float rz, float hatx, float haty, float trigl, float
+ }
+ 
+ void Game::gamepadButtonEvent(int device, Gamepad::ButtonEvent evt, int code) {
+ }
+ 
+ 
+ If not turned on with gamepadShouldOverridePolling then the changes have no effect
+ 
+ - Tim
+ 
+ */
+
 #include "Base.h"
 #include "Platform.h"
 #include "FileSystem.h"
@@ -11,6 +43,19 @@
 #include <android/sensor.h>
 #include <android_native_app_glue.h>
 #include <android/log.h>
+
+/* --- 1. Tim added code start --- */
+#include "android/input.h"
+#include <jni.h>
+#include <dlfcn.h>
+// bitwise for sources
+#define XPAD_SOURCE_DPAD        0x00000200
+#define XPAD_SOURCE_GAMEPAD     0x00000400
+#define XPAD_SOURCE_JOYSTICK    0x01000000
+#define XPAD_SOURCE_KEYBOARD    0x00000100
+
+static bool __androidOverrideGamepadPolling = false;
+/* --- 1. Tim added code end   --- */
 
 // Externally referenced global variables.
 struct android_app* __state;
@@ -177,6 +222,11 @@ static int getRotation()
 // Initialized EGL resources.
 static bool initEGL()
 {
+        
+    /* --- 2. Tim added code start --- */
+    __androidOverrideGamepadPolling = Game::getInstance()->gamepadShouldOverridePolling();
+    /* --- 2. Tim added code end   --- */
+        
     int samples = 0;
     Properties* config = Game::getInstance()->getConfig()->getNamespace("window", true);
     if (config)
@@ -759,6 +809,143 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event)
 {
     int32_t deviceId = AInputEvent_getDeviceId(event);
     int32_t source = AInputEvent_getSource(event);
+    
+    /* --- 3. Tim added code start --- */
+    
+    int32_t code = AKeyEvent_getKeyCode((const AInputEvent*)event);
+    
+    if (__androidOverrideGamepadPolling) {
+        
+        if (code >= AKEYCODE_MEDIA_PLAY_PAUSE && code <= AKEYCODE_MEDIA_FAST_FORWARD) {
+            return 0;       // don't handle media buttons
+        } else if (code == AKEYCODE_VOLUME_UP || code == AKEYCODE_VOLUME_DOWN || code == 164) { // _VOLUME_MUTE
+            return 0;       // or volume control
+        }
+        
+        
+        //if (source & XPAD_SOURCE_GAMEPAD) __android_log_print(ANDROID_LOG_INFO, "JNI", "source & XPAD_SOURCE_GAMEPAD");
+        //if (source & XPAD_SOURCE_JOYSTICK) __android_log_print(ANDROID_LOG_INFO, "JNI", "source & XPAD_SOURCE_JOYSTICK");
+        //if (source & XPAD_SOURCE_KEYBOARD) __android_log_print(ANDROID_LOG_INFO, "JNI", "source & XPAD_SOURCE_KEYBOARD");
+        //if (source & XPAD_SOURCE_DPAD) __android_log_print(ANDROID_LOG_INFO, "JNI", "source & XPAD_SOURCE_DPAD");
+        //else __android_log_print(ANDROID_LOG_INFO, "JNI", "source unkown");
+        //__android_log_print(ANDROID_LOG_INFO, "JNI", "code: %i   evt: %i", code, AInputEvent_getType(event));
+        
+        if (source & XPAD_SOURCE_GAMEPAD || source & XPAD_SOURCE_JOYSTICK) {
+            Game *gi = gameplay::Game::getInstance();
+            int32_t action = AKeyEvent_getAction((const AInputEvent*)event);
+            
+            // First check for joystick motion events.
+            if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
+                
+                // Joystick
+                //float x = clampFuzz(AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_X, 0) , 0.15f);
+                //float y = clampFuzz(AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_Y, 0) , 0.15f);
+                //float z = clampFuzz(AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_Z, 0) , 0.15f);
+                //float rz = clampFuzz(AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_RZ, 0) , 0.15f);
+                // for now, let game get pure motion events and handle deadzone if want to
+                float x = AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_X, 0);
+                float y = AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_Y, 0);
+                float z = AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_Z, 0);
+                float rz = AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_RZ, 0);
+                
+                // Hat Arrows
+                float hatx = AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_HAT_X, 0);
+                float haty = AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_HAT_Y, 0);
+                
+                // Trigger
+                float trigl = AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_BRAKE, 0);
+                float trigr = AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_GAS, 0);
+                
+                gi->gamepadAxisEvent(deviceId, x, y, z, rz, hatx, haty, trigl, trigr);
+                
+            } else {
+                // gamepad NOT motion, mostly pass through as is. Also tell Forms.
+                
+                // some mapping we know not gonna happen as axis secondary
+                // ipega maps -- cut this
+                //if (code == AKEYCODE_BUTTON_Z)          code = AKEYCODE_BUTTON_R1;
+                
+                int formKey = -1; // Match to internal form event?
+                if (code == AKEYCODE_BUTTON_A)                  formKey = Keyboard::KEY_RETURN;
+                else if (code == AKEYCODE_BUTTON_B)             formKey = Keyboard::KEY_BACKSPACE;
+                else if (code == Gamepad::AKEYCODE_DPAD_UP)     formKey = Keyboard::KEY_UP_ARROW;
+                else if (code == Gamepad::AKEYCODE_DPAD_DOWN)   formKey = Keyboard::KEY_DOWN_ARROW;
+                else if (code == Gamepad::AKEYCODE_DPAD_LEFT)   formKey = Keyboard::KEY_LEFT_ARROW;
+                else if (code == Gamepad::AKEYCODE_DPAD_RIGHT)  formKey = Keyboard::KEY_RIGHT_ARROW;
+                else if (code == Gamepad::AKEYCODE_DPAD_CENTER) formKey = Keyboard::KEY_RETURN;
+                
+                if (action == AKEY_EVENT_ACTION_DOWN) {
+                    // error ---
+                    //if (formKey != -1) gameplay::Form::keyEventInternal(Keyboard::KEY_PRESS, formKey);
+                    gi->gamepadButtonEvent(deviceId, Gamepad::BUTTON_PRESS, code);
+                } else if (action == AKEY_EVENT_ACTION_UP) {
+                    // error ---
+                    //if (formKey != -1) gameplay::Form::keyEventInternal(Keyboard::KEY_RELEASE, formKey);
+                    gi->gamepadButtonEvent(deviceId, Gamepad::BUTTON_RELEASE, code);
+                } else if (AInputEvent_getType(event) != AINPUT_EVENT_TYPE_MOTION) {
+                    return 0; // unhandled
+                }
+            }
+            
+            return 1; // handled gamepad or joystick
+            
+        } else if (source & XPAD_SOURCE_KEYBOARD || source & XPAD_SOURCE_DPAD) {
+            // sometimes gamepad source is keyboard. only handle for certain game keys
+            // also expect amaxon tv remote here
+            if ( (code >= Gamepad::AKEYCODE_BUTTON_1 && code <= Gamepad::AKEYCODE_BUTTON_12) ||
+                (code >= AKEYCODE_DPAD_UP && code <= AKEYCODE_DPAD_CENTER) ||
+                code == AKEYCODE_BACK || code == AKEYCODE_MENU ) {
+                
+                
+                if (code == AKEYCODE_DPAD_CENTER)          code = AKEYCODE_BUTTON_A;
+                // usb gamepades, which source as keyboards, need button mapping. this is most common?
+                else if (code == Gamepad::AKEYCODE_BUTTON_1)    code = AKEYCODE_BUTTON_Y;
+                else if (code == Gamepad::AKEYCODE_BUTTON_2)    code = AKEYCODE_BUTTON_B;
+                else if (code == Gamepad::AKEYCODE_BUTTON_3)    code = AKEYCODE_BUTTON_A;
+                else if (code == Gamepad::AKEYCODE_BUTTON_4)    code = AKEYCODE_BUTTON_X;
+                else if (code == Gamepad::AKEYCODE_BUTTON_5)    code = AKEYCODE_BUTTON_L2;
+                else if (code == Gamepad::AKEYCODE_BUTTON_6)    code = AKEYCODE_BUTTON_R2;
+                else if (code == Gamepad::AKEYCODE_BUTTON_7)    code = AKEYCODE_BUTTON_L1;
+                else if (code == Gamepad::AKEYCODE_BUTTON_8)    code = AKEYCODE_BUTTON_R1;
+                else if (code == Gamepad::AKEYCODE_BUTTON_9)    code = AKEYCODE_BUTTON_C;
+                else if (code == Gamepad::AKEYCODE_BUTTON_10)   code = AKEYCODE_BUTTON_Z;
+                else if (code == Gamepad::AKEYCODE_BUTTON_11)   code = AKEYCODE_BUTTON_THUMBL;
+                else if (code == Gamepad::AKEYCODE_BUTTON_12)   code = AKEYCODE_BUTTON_THUMBR;
+                
+                int formKey = -1; // Match to internal form event?
+                if (code == AKEYCODE_BUTTON_A)                  formKey = Keyboard::KEY_RETURN;
+                else if (code == AKEYCODE_BUTTON_B)             formKey = Keyboard::KEY_BACKSPACE;
+                else if (code == Gamepad::AKEYCODE_DPAD_UP)     formKey = Keyboard::KEY_UP_ARROW;
+                else if (code == Gamepad::AKEYCODE_DPAD_DOWN)   formKey = Keyboard::KEY_DOWN_ARROW;
+                else if (code == Gamepad::AKEYCODE_DPAD_LEFT)   formKey = Keyboard::KEY_LEFT_ARROW;
+                else if (code == Gamepad::AKEYCODE_DPAD_RIGHT)  formKey = Keyboard::KEY_RIGHT_ARROW;
+                else if (code == Gamepad::AKEYCODE_DPAD_CENTER) formKey = Keyboard::KEY_RETURN;
+                
+                // handle
+                Game *gi = gameplay::Game::getInstance();
+                int32_t action = AKeyEvent_getAction((const AInputEvent*)event);
+                if (action == AKEY_EVENT_ACTION_DOWN) {
+                    // error ---
+                    //if (formKey != -1) gameplay::Form::keyEventInternal(Keyboard::KEY_PRESS, formKey);
+                    gi->gamepadButtonEvent(AInputEvent_getDeviceId(event), Gamepad::BUTTON_PRESS, code);
+                } else if (action == AKEY_EVENT_ACTION_UP) {
+                    // error ---
+                    //if (formKey != -1) gameplay::Form::keyEventInternal(Keyboard::KEY_RELEASE, formKey);
+                    gi->gamepadButtonEvent(AInputEvent_getDeviceId(event), Gamepad::BUTTON_RELEASE, code);
+                } else {
+                    return 0; // unhandled
+                }
+                
+                return 1; // handled gamepad button press
+                
+            }
+        }
+        // continue on if: a) keyboard/dpad source with keycode we didn't care about, b) another type of source
+        
+    } // if __overrideGamepadPolling
+    
+    /* --- 3. Tim added code end   --- */
+
 
     if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION)
     {
@@ -1132,41 +1319,79 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event)
     } 
     else if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_KEY)
     {
-        int32_t action = AKeyEvent_getAction(event);
-        int32_t keycode = AKeyEvent_getKeyCode(event);
-        int32_t metastate = AKeyEvent_getMetaState(event);
-
-        //Don't consume volume up/down events.
-        if (keycode == AKEYCODE_VOLUME_DOWN || keycode == AKEYCODE_VOLUME_UP)
-            return 0;
-
-        switch(action)
-        {
-            case AKEY_EVENT_ACTION_DOWN:
-                if (((source & AINPUT_SOURCE_GAMEPAD) == AINPUT_SOURCE_GAMEPAD) || ((source & AINPUT_SOURCE_JOYSTICK) == AINPUT_SOURCE_JOYSTICK))
-                {
-                    gameplay::Platform::gamepadButtonPressedEventInternal(deviceId, gameplay::getGamepadButtonMapping(keycode));
-                }
-                else
-                {
-                    gameplay::Platform::keyEventInternal(Keyboard::KEY_PRESS, getKey(keycode, metastate));
-                    if (int character = getUnicode(keycode, metastate))
-                        gameplay::Platform::keyEventInternal(Keyboard::KEY_CHAR, character);
-                }
-                break;
+        
+        
+        /* --- 4. Tim CHANGED code start --- */
+        
+        if (__androidOverrideGamepadPolling) {
+            
+            int32_t action = AKeyEvent_getAction(event);
+            //int32_t keycode = AKeyEvent_getKeyCode(event);
+            int32_t metastate = AKeyEvent_getMetaState(event);
+            
+            //Don't consume volume up/down events. -- already checked
+            //if (keycode == AKEYCODE_VOLUME_DOWN || keycode == AKEYCODE_VOLUME_UP) return 0;
+            
+            int key = getKey(code, metastate);
+            
+            if (action == AKEY_EVENT_ACTION_DOWN) {
+                // error ---
+                //if (!Form::keyEventInternal(Keyboard::KEY_PRESS, key)) {
+                Game::getInstance()->keyEvent(Keyboard::KEY_PRESS, getKey(code, metastate), deviceId);
+                if (int character = getUnicode(code, metastate))
+                    Game::getInstance()->keyEvent(Keyboard::KEY_CHAR, character, deviceId);
+                //}
+            } else if (action == AKEY_EVENT_ACTION_UP) {
+                // error ---
+                //if (!Form::keyEventInternal(Keyboard::KEY_RELEASE, key)) {
+                Game::getInstance()->keyEvent(Keyboard::KEY_RELEASE, getKey(code, metastate), deviceId);
+                //}
+            }
+            return 1;
+            
+        } else {
+            // original polling code start
+            
+            int32_t action = AKeyEvent_getAction(event);
+            int32_t keycode = AKeyEvent_getKeyCode(event);
+            int32_t metastate = AKeyEvent_getMetaState(event);
+            
+            //Don't consume volume up/down events.
+            if (keycode == AKEYCODE_VOLUME_DOWN || keycode == AKEYCODE_VOLUME_UP)
+                return 0;
+            
+            switch(action)
+            {
+                case AKEY_EVENT_ACTION_DOWN:
+                    if (((source & AINPUT_SOURCE_GAMEPAD) == AINPUT_SOURCE_GAMEPAD) || ((source & AINPUT_SOURCE_JOYSTICK) == AINPUT_SOURCE_JOYSTICK))
+                    {
+                        gameplay::Platform::gamepadButtonPressedEventInternal(deviceId, gameplay::getGamepadButtonMapping(keycode));
+                    }
+                    else
+                    {
+                        gameplay::Platform::keyEventInternal(Keyboard::KEY_PRESS, getKey(keycode, metastate));
+                        if (int character = getUnicode(keycode, metastate))
+                            gameplay::Platform::keyEventInternal(Keyboard::KEY_CHAR, character);
+                    }
+                    break;
                     
-            case AKEY_EVENT_ACTION_UP:
-                if (((source & AINPUT_SOURCE_GAMEPAD) == AINPUT_SOURCE_GAMEPAD) || ((source & AINPUT_SOURCE_JOYSTICK) == AINPUT_SOURCE_JOYSTICK))
-                {
-                    gameplay::Platform::gamepadButtonReleasedEventInternal(deviceId, gameplay::getGamepadButtonMapping(keycode));
-                }
-                else
-                {
-                    gameplay::Platform::keyEventInternal(Keyboard::KEY_RELEASE, getKey(keycode, metastate));
-                }
-                break;
+                case AKEY_EVENT_ACTION_UP:
+                    if (((source & AINPUT_SOURCE_GAMEPAD) == AINPUT_SOURCE_GAMEPAD) || ((source & AINPUT_SOURCE_JOYSTICK) == AINPUT_SOURCE_JOYSTICK))
+                    {
+                        gameplay::Platform::gamepadButtonReleasedEventInternal(deviceId, gameplay::getGamepadButtonMapping(keycode));
+                    }
+                    else
+                    {
+                        gameplay::Platform::keyEventInternal(Keyboard::KEY_RELEASE, getKey(keycode, metastate));
+                    }
+                    break;
+            }
+            return 1;
+            
+            // original polling code end
         }
-        return 1;
+        
+        /* --- 4. Tim CHANGED code end --- */
     }
     return 0;
 }
