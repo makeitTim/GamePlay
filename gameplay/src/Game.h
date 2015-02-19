@@ -69,6 +69,14 @@ public:
      * Destructor.
      */
     virtual ~Game();
+    
+    /* --- 1. Tim added code start --- */
+    // evt and code match enums added to Gamepad.h
+    virtual bool gamepadShouldOverridePolling();
+    virtual void gamepadAxisEvent(int device, float x, float y, float z, float rz, float hatx, float haty, float trigl, float trigr);
+    virtual void gamepadButtonEvent(int device, Gamepad::ButtonEvent evt, int code);
+    virtual void keyEvent(Keyboard::KeyEvent evt, int key, int device);
+    /* --- 1. Tim added code end   --- */
 
     /**
      * Gets the single instance of the game.
