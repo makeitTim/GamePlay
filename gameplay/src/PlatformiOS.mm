@@ -932,7 +932,7 @@ int getUnicode(int key);
     return UIInterfaceOrientationMaskAllButUpsideDown;
 }
 -(BOOL)shouldAutorotate {
-    return [[UIDevice currentDevice] orientation] != UIInterfaceOrientationPortrait;
+    return [[UIDevice currentDevice] orientation] != UIDeviceOrientationPortrait;
 }
 // --- added code done
 
