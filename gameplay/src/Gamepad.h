@@ -277,7 +277,7 @@ private:
     
     void bindGamepadControls(Container* container);
 
-    //GamepadHandle _handle; --- moved to public
+    //GamepadHandle _handle;
     unsigned int _buttonCount;
     unsigned int _joystickCount;
     unsigned int _triggerCount;
