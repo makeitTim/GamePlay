@@ -25,8 +25,8 @@
 ./gameplay-encoder -s 38 $1.ttf $1_38.gpb
 
 # 800
-#./gameplay-encoder -s 57 $1.ttf $1_60.gpb
-./gameplay-encoder -s 38 $1.ttf $1_40.gpb
+#./gameplay-encoder -s 60 $1.ttf $1_60.gpb
+./gameplay-encoder -s 40 $1.ttf $1_40.gpb
 
 # 1080
 #./gameplay-encoder -s 81 $1.ttf $1_81.gpb
