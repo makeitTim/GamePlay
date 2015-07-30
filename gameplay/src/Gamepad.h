@@ -133,7 +133,11 @@ public:
         BUTTON_RIGHT,
         BUTTON_MENU1,
         BUTTON_MENU2,
-        BUTTON_MENU3
+        BUTTON_MENU3,
+        /* --- 1. Tim added code start --- */
+        BUTTON_C,
+        BUTTON_Z
+        /* --- 1. Tim added code end   --- */        
     };
 
     /**

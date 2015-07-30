@@ -795,12 +795,11 @@ Gamepad::ButtonMapping getGamepadButtonMapping(jint keycode)
             
             /* --- X. Tim added for better mapping   --- */
             // C or Z seem to come up often with irregular gamepads
-            // gameplay doesn't have c or z, so use the original values
-            // at least can let the user map themselves
+            // I also added these to Gamepad.h enum
         case AKEYCODE_BUTTON_C:
-            return (Gamepad::ButtonMapping)AKEYCODE_BUTTON_C; // 98
+            return Gamepad::BUTTON_C;
         case AKEYCODE_BUTTON_Z:
-            return (Gamepad::ButtonMapping)AKEYCODE_BUTTON_Z; // 101
+            return Gamepad::BUTTON_Z;
             /* --- X. Tim added code end   --- */
             
     default:
