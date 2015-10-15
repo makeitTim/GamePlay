@@ -168,6 +168,9 @@ public:
      * @return The node that this audio source is attached to.
      */
     Node* getNode() const;
+    
+    // --- moved from private: to public: to get access from game
+    ALuint _alSource;
 
 private:
 
@@ -206,7 +209,7 @@ private:
 
     bool streamDataIfNeeded();
 
-    ALuint _alSource;
+    //ALuint _alSource; --- moved to public
     AudioBuffer* _buffer;
     bool _looped;
     float _gain;

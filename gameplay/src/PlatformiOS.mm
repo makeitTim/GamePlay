@@ -18,6 +18,10 @@
 #import <OpenGLES/ES2/glext.h>
 #import <mach/mach_time.h>
 
+// --- so background music (from other apps) will continue playing
+#import <AVFoundation/AVFoundation.h>
+// --- added code done
+
 #define UIInterfaceOrientationEnum(x) ([x isEqualToString:@"UIInterfaceOrientationPortrait"]?UIInterfaceOrientationPortrait:                        \
                                       ([x isEqualToString:@"UIInterfaceOrientationPortraitUpsideDown"]?UIInterfaceOrientationPortraitUpsideDown:    \
                                       ([x isEqualToString:@"UIInterfaceOrientationLandscapeLeft"]?UIInterfaceOrientationLandscapeLeft:              \
@@ -203,7 +207,16 @@ int getUnicode(int key);
         
         // Set the resource path and initalize the game
         NSString* bundlePath = [[[NSBundle mainBundle] bundlePath] stringByAppendingString:@"/"];
-        FileSystem::setResourcePath([bundlePath fileSystemRepresentation]); 
+        FileSystem::setResourcePath([bundlePath fileSystemRepresentation]);
+        
+        // --- so background music (from other apps) will continue playing
+        NSError *setCategoryError = nil;
+        BOOL success = [[AVAudioSession sharedInstance]
+                        setCategory: AVAudioSessionCategoryAmbient
+                        error: &setCategoryError];
+        if (!success) { /* handle the error in setCategoryError */ }
+        // --- added code done
+        
     }
     return self;
 }
@@ -914,6 +927,15 @@ int getUnicode(int key);
     }
 }
 
+// --- added to fix orientation issues to do with launches and game center
+-(NSUInteger) supportedinterfaceorientations {
+    return UIInterfaceOrientationMaskAllButUpsideDown;
+}
+-(BOOL)shouldAutorotate {
+    return [[UIDevice currentDevice] orientation] != UIDeviceOrientationPortrait;
+}
+// --- added code done
+
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
     // Fetch the supported orientations array
@@ -972,6 +994,17 @@ int getUnicode(int key);
 @implementation AppDelegate
 
 @synthesize viewController;
+
+// --- as part of interface orientation thing.... this is needed
+//     for iOS 6 (in UIApplicationDelegate)
+- (NSUInteger)application:(UIApplication *)application
+supportedInterfaceOrientationsForWindow:(UIWindow *)window
+{
+    return UIInterfaceOrientationMaskPortrait |
+    UIInterfaceOrientationMaskLandscapeLeft |
+    UIInterfaceOrientationMaskLandscapeRight;
+}
+// --- added code done
 
 - (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions
 {

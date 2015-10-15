@@ -139,6 +139,14 @@ public:
      * @param enabled True to enable batching (default), false otherwise.
      */
     void setBatchingEnabled(bool enabled);
+    
+    // --- moved to public by Tim
+    /**
+     * Propagate key events to enabled forms.
+     *
+     * @return Whether the key event was consumed by a form.
+     */
+    static bool keyEventInternal(Keyboard::KeyEvent evt, int key);
 
 private:
     
@@ -186,12 +194,8 @@ private:
      */
     static bool touchEventInternal(Touch::TouchEvent evt, int x, int y, unsigned int contactIndex);
 
-    /**
-     * Propagate key events to enabled forms.
-     *
-     * @return Whether the key event was consumed by a form.
-     */
-    static bool keyEventInternal(Keyboard::KeyEvent evt, int key);
+
+    //static bool keyEventInternal(Keyboard::KeyEvent evt, int key); ---- moved to public
 
     /**
      * Propagate mouse events to enabled forms.

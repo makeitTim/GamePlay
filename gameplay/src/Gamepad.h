@@ -25,6 +25,83 @@ class Gamepad
     friend class Button;
 
 public:
+    
+    /* --- 1. Tim added code start --- */
+    
+    // For describing the new game events I'm making
+    enum ButtonEvent {
+        BUTTON_PRESS,
+        BUTTON_RELEASE,
+    };
+    /*
+     enum AxisEvent {
+     AXIS_DPAD,
+     AXIS_LEFTJOYSTICK,
+     AXIS_RIGHTJOYSTICK,
+     AXIS_LEFTTRIGGER,
+     AXIS_RIGHTTRIGGER
+     };*/
+    
+    // Keycodes for external gamepads
+    // I've cut it down to only expected gamepad ones
+    enum {
+        AKEYCODE_UNKNOWN         = 0,
+        
+        AKEYCODE_HOME            = 3,
+        AKEYCODE_BACK            = 4,
+        
+        AKEYCODE_DPAD_UP         = 19,
+        AKEYCODE_DPAD_DOWN       = 20,
+        AKEYCODE_DPAD_LEFT       = 21,
+        AKEYCODE_DPAD_RIGHT      = 22,
+        AKEYCODE_DPAD_CENTER     = 23,
+        AKEYCODE_VOLUME_UP       = 24,
+        AKEYCODE_VOLUME_DOWN     = 25,
+        
+        AKEYCODE_MENU            = 82,
+        
+        // 3 media buttons on amazon
+        AKEYCODE_MEDIA_PLAY_PAUSE= 85,
+        AKEYCODE_MEDIA_REWIND    = 89,
+        AKEYCODE_MEDIA_FAST_FORWARD = 90,
+        
+        AKEYCODE_BUTTON_A        = 96,
+        AKEYCODE_BUTTON_B        = 97,
+        AKEYCODE_BUTTON_C        = 98,
+        AKEYCODE_BUTTON_X        = 99,
+        AKEYCODE_BUTTON_Y        = 100,
+        AKEYCODE_BUTTON_Z        = 101,
+        AKEYCODE_BUTTON_L1       = 102,
+        AKEYCODE_BUTTON_R1       = 103,
+        AKEYCODE_BUTTON_L2       = 104,
+        AKEYCODE_BUTTON_R2       = 105,
+        AKEYCODE_BUTTON_THUMBL   = 106,
+        AKEYCODE_BUTTON_THUMBR   = 107,
+        AKEYCODE_BUTTON_START    = 108,
+        AKEYCODE_BUTTON_SELECT   = 109,
+        AKEYCODE_BUTTON_MODE     = 110,
+        
+        // these will be mapped to above
+        AKEYCODE_BUTTON_1        = 188,
+        AKEYCODE_BUTTON_2        = 189,
+        AKEYCODE_BUTTON_3        = 190,
+        AKEYCODE_BUTTON_4        = 191,
+        AKEYCODE_BUTTON_5        = 192,
+        AKEYCODE_BUTTON_6        = 193,
+        AKEYCODE_BUTTON_7        = 194,
+        AKEYCODE_BUTTON_8        = 195,
+        AKEYCODE_BUTTON_9        = 196,
+        AKEYCODE_BUTTON_10       = 197,
+        AKEYCODE_BUTTON_11       = 198,
+        AKEYCODE_BUTTON_12       = 199,
+    };
+    
+    // --- moved to public by Tim
+    GamepadHandle _handle;
+    
+    /* --- 1. Tim added code end   --- */
+    
+    
 
     /**
      *  Gamepad events.
@@ -56,7 +133,11 @@ public:
         BUTTON_RIGHT,
         BUTTON_MENU1,
         BUTTON_MENU2,
-        BUTTON_MENU3
+        BUTTON_MENU3,
+        /* --- 1. Tim added code start --- */
+        BUTTON_C,
+        BUTTON_Z
+        /* --- 1. Tim added code end   --- */        
     };
 
     /**
@@ -200,7 +281,7 @@ private:
     
     void bindGamepadControls(Container* container);
 
-    GamepadHandle _handle;
+    //GamepadHandle _handle;
     unsigned int _buttonCount;
     unsigned int _joystickCount;
     unsigned int _triggerCount;
