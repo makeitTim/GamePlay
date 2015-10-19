@@ -736,7 +736,7 @@ double getMachTimeInMilliseconds()
 {
     [gameLock lock];
     
-    NSSize size = [ [ _window contentView ] frame ].size;
+    NSSize size = [ [ [self window] contentView ] frame ].size;
     __width = size.width;
     __height = size.height;
     CGLContextObj cglContext = (CGLContextObj)[[self openGLContext] CGLContextObj];
