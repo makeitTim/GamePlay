@@ -13,6 +13,19 @@ extern char** __argv;
  */
 int main(int argc, char** argv)
 {
+#ifndef DEBUG
+    //do receipt validation first thing in main function
+    NSString *receiptPath = [[[NSBundle mainBundle] appStoreReceiptURL] path];
+    // Test whether the receipt is present at the above path
+    
+    if (![[NSFileManager defaultManager] fileExistsAtPath:receiptPath]) {
+        //NSLog(@"receipt validation failed.");
+        // Validation fails
+        exit(173);
+    }
+#endif
+
+    
     __argc = argc;
     __argv = argv;
     NSAutoreleasePool *p = [[NSAutoreleasePool alloc] init];

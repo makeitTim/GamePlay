@@ -916,6 +916,14 @@ static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTime
         [[self window] setLevel: NSNormalWindowLevel];
     }
     [[self window] makeKeyAndOrderFront: self];
+    
+    //
+    // ** Hardcoded set OSX window title - this seems to be the only way?
+    // -- Just remember to change it for each app
+    //
+    //[[self window] setTitle: @"Hockey General Manager"];
+    //[[self window] setTitle: @"Basketball General Manager"];
+    //[[self window] setTitle: @"Baseball General Manager"];
     [[self window] setTitle: [NSString stringWithUTF8String: __title ? __title : ""]];
     
     // Make all the OpenGL calls to setup rendering and build the necessary rendering objects
@@ -1579,8 +1587,8 @@ int getUnicode(int key)
 @interface FullscreenWindow : NSWindow
 {
 }
-
-- (void)gameCenterViewControllerDidFinish:(GKGameCenterViewController *)gameCenterViewController;
+// not using game center in this app
+//- (void)gameCenterViewControllerDidFinish:(GKGameCenterViewController *)gameCenterViewController;
 @end
 
 @implementation FullscreenWindow
@@ -1589,11 +1597,11 @@ int getUnicode(int key)
     return YES;
 }
 
-- (void)gameCenterViewControllerDidFinish:(GKGameCenterViewController *)gameCenterViewController
-{
-    GKDialogController *sdc = [GKDialogController sharedDialogController];
-    [sdc dismiss: self];
-}
+//- (void)gameCenterViewControllerDidFinish:(GKGameCenterViewController *)gameCenterViewController
+//{
+//    GKDialogController *sdc = [GKDialogController sharedDialogController];
+//    [sdc dismiss: self];
+//}
 @end
 
 

@@ -929,10 +929,10 @@ int getUnicode(int key);
 
 // --- added to fix orientation issues to do with launches and game center
 -(NSUInteger) supportedinterfaceorientations {
-    return UIInterfaceOrientationMaskAllButUpsideDown;
+    return UIInterfaceOrientationMaskLandscape;
 }
 -(BOOL)shouldAutorotate {
-    return [[UIDevice currentDevice] orientation] == UIDeviceOrientationPortrait;
+    return YES;
 }
 // --- added code done
 
