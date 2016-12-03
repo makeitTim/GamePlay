@@ -932,7 +932,7 @@ int getUnicode(int key);
     return UIInterfaceOrientationMaskLandscape;
 }
 -(BOOL)shouldAutorotate {
-    return YES;
+    return [[UIDevice currentDevice] orientation] != UIDeviceOrientationPortrait;
 }
 // --- added code done
 
@@ -1000,7 +1000,8 @@ int getUnicode(int key);
 - (NSUInteger)application:(UIApplication *)application
 supportedInterfaceOrientationsForWindow:(UIWindow *)window
 {
-    return UIInterfaceOrientationMaskPortrait |
+    return
+    //UIInterfaceOrientationMaskPortrait |
     UIInterfaceOrientationMaskLandscapeLeft |
     UIInterfaceOrientationMaskLandscapeRight;
 }

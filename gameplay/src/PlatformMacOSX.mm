@@ -1587,8 +1587,8 @@ int getUnicode(int key)
 @interface FullscreenWindow : NSWindow
 {
 }
-// not using game center in this app
-//- (void)gameCenterViewControllerDidFinish:(GKGameCenterViewController *)gameCenterViewController;
+// using game center in this app
+- (void)gameCenterViewControllerDidFinish:(GKGameCenterViewController *)gameCenterViewController;
 @end
 
 @implementation FullscreenWindow
@@ -1597,11 +1597,11 @@ int getUnicode(int key)
     return YES;
 }
 
-//- (void)gameCenterViewControllerDidFinish:(GKGameCenterViewController *)gameCenterViewController
-//{
-//    GKDialogController *sdc = [GKDialogController sharedDialogController];
-//    [sdc dismiss: self];
-//}
+- (void)gameCenterViewControllerDidFinish:(GKGameCenterViewController *)gameCenterViewController
+{
+    GKDialogController *sdc = [GKDialogController sharedDialogController];
+    [sdc dismiss: self];
+}
 @end
 
 
