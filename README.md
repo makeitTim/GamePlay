@@ -17,20 +17,18 @@ GamePlay is an open-source, cross-platform native C++ game framework for creatin
 - [iOS](https://github.com/gameplay3d/GamePlay/wiki/Apple-Xcode-Setup)
 - [Android](https://github.com/gameplay3d/GamePlay/wiki/Android-NDK-Setup)
 
-## Roadmap for 'next' branch
-- [4.0.0](https://github.com/gameplay3d/GamePlay/milestones/4.0.0)
-- [backlog](https://github.com/gameplay3d/GamePlay/issues?q=is%3Aopen+is%3Aissue+no%3Amilestone)
+## NOTES
 
-## License
-Open-source under [Apache 2.0 license](http://www.tldrlegal.com/license/apache-license-2.0-%28apache-2.0%29).
+### iOS
+When archiving a project we now need to fix the project's build settings so Release includes deps library, same as Debug.
+- Linking / Other Linker Flags / Release / Any iOS Simulator SDK
+-- -L../../GamePlay/external-deps/lib/ios/x86
+- Linking / Other Linker Flags / Release / Any iOS SDK
+-- -L../../GamePlay/external-deps/lib/ios/arm
 
-## Bug Reporting
-Please log bugs under [Issues](https://github.com/gameplay3d/GamePlay/issues) on github.
+PlatformiOS.mm 	These must be changed based on what interface orientations are supported
+				> (NSUInteger) supportedinterfaceorientations
+				> (BOOL)shouldAutorotate
+				> (NSUInteger)application:(UIApplication *)application
 
-## Disclaimer
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
-PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT 
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR 
-OTHER DEALINGS IN THE SOFTWARE.
+
