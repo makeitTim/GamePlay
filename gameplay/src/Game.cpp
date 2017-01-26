@@ -90,6 +90,8 @@ Game::~Game()
 }
     
     /* --- 1. Tim added code start --- */
+    bool Game::orientationIsPortraitForIOS() { return false; }
+    
     // empty implimintation. true virtual would have broken static Game reference in game
     bool Game::gamepadShouldOverridePolling() { return false; }
     void Game::gamepadAxisEvent(int device, float x, float y, float z, float rz, float hatx, float haty, float trigl, float trigr) { }

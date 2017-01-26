@@ -45,6 +45,9 @@
 #include <android/log.h>
 
 /* --- 1. Tim added code start --- */
+#include <android/native_window.h> // for loading hybrid surface window
+#include <android/native_window_jni.h>
+
 #include "android/input.h"
 #include <jni.h>
 #include <dlfcn.h>
@@ -1999,7 +2002,21 @@ std::string Platform::displayFileDialog(size_t mode, const char* title, const ch
 
 extern "C"
 {
-
+    
+    /* --- 5. Tim CHANGED code start --- */
+    JNIEXPORT void JNICALL Java_org_gameplay3d_GamePlayNativeActivity_setSurface(JNIEnv* env, jclass clazz, jobject surface)
+    {
+        if (surface != 0) {
+            __android_log_print(ANDROID_LOG_INFO, "JNI", "Creating GL window with java surface");
+            __state->window = ANativeWindow_fromSurface(env, surface);
+        } else {
+            __android_log_print(ANDROID_LOG_INFO, "JNI", "Releasing GL window");
+            ANativeWindow_release(__state->window);
+        }
+    }
+    
+    /* --- 5. Tim CHANGED code end --- */
+    
 JNIEXPORT void JNICALL Java_org_gameplay3d_GamePlayNativeActivity_gamepadEventConnectedImpl(JNIEnv* env, jclass clazz, jint deviceId, jint buttonCount, jint joystickCount, jint triggerCount, jstring deviceName)
 {
     const char* name = env->GetStringUTFChars(deviceName, JNI_FALSE);

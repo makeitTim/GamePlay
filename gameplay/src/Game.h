@@ -71,6 +71,11 @@ public:
     virtual ~Game();
     
     /* --- 1. Tim added code start --- */
+    /** Allows the Game class to specific orientation. If not implimented the default is FALSE, landscape.
+     *  So you only need to impliment this function for PORTAIT app.
+     * @return true to turn on portrait */
+    virtual bool orientationIsPortraitForIOS();
+    
     // evt and code match enums added to Gamepad.h
     virtual bool gamepadShouldOverridePolling();
     virtual void gamepadAxisEvent(int device, float x, float y, float z, float rz, float hatx, float haty, float trigl, float trigr);

@@ -929,13 +929,20 @@ int getUnicode(int key);
 
 // --- added to fix orientation issues to do with launches and game center
 -(NSUInteger) supportedinterfaceorientations {
-    return UIInterfaceOrientationPortrait;
-    
-    //return UIInterfaceOrientationMaskLandscape;
+    // This method never seems to be called? Still used in old iOS versions?
+    if (Game::getInstance()->orientationIsPortraitForIOS()) {
+        return UIInterfaceOrientationPortrait;
+    } else {
+        return UIInterfaceOrientationMaskLandscape;
+    }
 }
 -(BOOL)shouldAutorotate {
-    return [[UIDevice currentDevice] orientation] == UIDeviceOrientationPortrait;
-    //return [[UIDevice currentDevice] orientation] != UIDeviceOrientationPortrait;
+    // this method is called several times on startup
+    if (Game::getInstance()->orientationIsPortraitForIOS()) {
+        return [[UIDevice currentDevice] orientation] == UIDeviceOrientationPortrait;
+    } else {
+        return [[UIDevice currentDevice] orientation] != UIDeviceOrientationPortrait;
+    }
 }
 // --- added code done
 
@@ -1003,10 +1010,13 @@ int getUnicode(int key);
 - (NSUInteger)application:(UIApplication *)application
 supportedInterfaceOrientationsForWindow:(UIWindow *)window
 {
-    return
-    UIInterfaceOrientationMaskPortrait;// |
-   // UIInterfaceOrientationMaskLandscapeLeft |
-   // UIInterfaceOrientationMaskLandscapeRight;
+    // this method is called a ridiculous amount of times on startup
+    if (Game::getInstance()->orientationIsPortraitForIOS()) {
+        return UIInterfaceOrientationMaskPortrait;
+    } else {
+        return UIInterfaceOrientationMaskLandscapeLeft | UIInterfaceOrientationMaskLandscapeRight;
+    }    
+    
 }
 // --- added code done
 
