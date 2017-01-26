@@ -1010,7 +1010,9 @@ int getUnicode(int key);
 - (NSUInteger)application:(UIApplication *)application
 supportedInterfaceOrientationsForWindow:(UIWindow *)window
 {
-    // this method is called a ridiculous amount of times on startup
+    // this method is called for every view and subview...
+    // on GamePlay startup this is a rdiciulous amount of times,
+    // more than expected for just each view?
     if (Game::getInstance()->orientationIsPortraitForIOS()) {
         return UIInterfaceOrientationMaskPortrait;
     } else {
