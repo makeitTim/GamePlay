@@ -938,6 +938,9 @@ int getUnicode(int key);
 }
 -(BOOL)shouldAutorotate {
     // this method is called several times on startup
+    // For all these methods, I have decided to ask the Game class instead of
+    // asking the mainBundle every time. Atlernatively, could ask bundle
+    // once and save the results.
     if (Game::getInstance()->orientationIsPortraitForIOS()) {
         return [[UIDevice currentDevice] orientation] == UIDeviceOrientationPortrait;
     } else {

@@ -26,9 +26,3 @@ When archiving a project we now need to fix the project's build settings so Rele
 - Linking / Other Linker Flags / Release / Any iOS SDK
 -- -L../../GamePlay/external-deps/lib/ios/arm
 
-PlatformiOS.mm 	These must be changed based on what interface orientations are supported
-				> (NSUInteger) supportedinterfaceorientations
-				> (BOOL)shouldAutorotate
-				> (NSUInteger)application:(UIApplication *)application
-
-
