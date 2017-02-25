@@ -26,3 +26,4 @@ When archiving a project we now need to fix the project's build settings so Rele
 - Linking / Other Linker Flags / Release / Any iOS SDK
 -- -L../../GamePlay/external-deps/lib/ios/arm
 
+Also turn of bitcode in iOS project under Build options set 'Enabled Bitcode' to 'No'
