@@ -570,6 +570,9 @@ bool Game::mouseEvent(Mouse::MouseEvent evt, int x, int y, int wheelDelta)
 void Game::resizeEvent(unsigned int width, unsigned int height)
 {
     // stub
+    
+    // geoff added code test, when resizing, also reset the viewport ??
+   // setViewport(Rectangle(0.0f, 0.0f, (float)width, (float)height));
 }
 
 bool Game::isGestureSupported(Gesture::GestureEvent evt)

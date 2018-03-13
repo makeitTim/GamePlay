@@ -15,6 +15,10 @@
 #import <Foundation/Foundation.h>
 #import <Availability.h>
 #import <GameKit/GameKit.h>
+// GEOFF ADDED CODE
+#include <CoreFoundation/CoreFoundation.h>
+#include <Carbon/Carbon.h> /* For kVK_ constants, and TIS functions. */
+
 
 // These should probably be moved to a platform common file
 #define SONY_USB_VENDOR_ID              0x054c
@@ -1163,10 +1167,124 @@ bool getMousePointForEvent(NSPoint& point, NSEvent* event)
     return YES;
 }
 
+// GEOFF ADDED CODE - to detect what key is being pressed no matter what keyboard layout
+char * MYCFStringCopyUTF8String(CFStringRef aString) {
+    if (aString == NULL) {
+        return NULL;
+    }
+    
+    CFIndex length = CFStringGetLength(aString);
+    CFIndex maxSize =
+    CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8) + 1;
+    char *buffer = (char *)malloc(maxSize);
+    if (CFStringGetCString(aString, buffer, maxSize,
+                           kCFStringEncodingUTF8)) {
+        return buffer;
+    }
+    free(buffer); // If we failed
+    return NULL;
+}
+
+/* Returns string representation of key, if it is printable.
+ * Ownership follows the Create Rule; that is, it is the caller's
+ * responsibility to release the returned object. */
+//CFStringRef createStringForKey(CGKeyCode keyCode)
+unsigned short createStringForKey(CGKeyCode keyCode)
+{
+    TISInputSourceRef currentKeyboard = TISCopyCurrentKeyboardInputSource();
+    CFDataRef layoutData = (CFDataRef)TISGetInputSourceProperty(currentKeyboard, kTISPropertyUnicodeKeyLayoutData);
+
+    const UCKeyboardLayout *keyboardLayout =
+    (const UCKeyboardLayout *)CFDataGetBytePtr(layoutData);
+    
+    UInt32 keysDown = 0;
+    static UniChar chars[4];
+    UniCharCount realLength;
+    
+    UCKeyTranslate(keyboardLayout,
+                   keyCode,
+                   kUCKeyActionDisplay,
+                   0,
+                   LMGetKbdType(),
+                   kUCKeyTranslateNoDeadKeysBit,
+                   &keysDown,
+                   sizeof(chars) / sizeof(chars[0]),
+                   &realLength,
+                   chars);
+    CFRelease(currentKeyboard);
+    
+  //  return CFStringCreateWithCharacters(kCFAllocatorDefault, chars, 1);
+    return chars[0];
+}
+// END OF GEOFF ADDED CODE
 int getKey(unsigned short keyCode, unsigned int modifierFlags)
 {
+    // geoff added code, test key
+    //printf("key %s\n", MYCFStringCopyUTF8String(createStringForKey(keyCode)));
+   // printf("key %x\n", createStringForKey(keyCode));
+    
     __shiftDown = (modifierFlags & NSShiftKeyMask);
     unsigned int caps = (__shiftDown ? 1 : 0) ^ ((modifierFlags & NSAlphaShiftKeyMask) ? 1 : 0);
+    
+    // GEOFF ADDED CODE - must check letters first before special characters
+    switch(createStringForKey(keyCode)) //if converted key is a letter, return that
+    {
+        case 0x61:
+            return caps ? Keyboard::KEY_CAPITAL_A : Keyboard::KEY_A;
+        case 0x62:
+            return caps ? Keyboard::KEY_CAPITAL_B : Keyboard::KEY_B;
+        case 0x63:
+            return caps ? Keyboard::KEY_CAPITAL_C : Keyboard::KEY_C;
+        case 0x64:
+            return caps ? Keyboard::KEY_CAPITAL_D : Keyboard::KEY_D;
+        case 0x65:
+            return caps ? Keyboard::KEY_CAPITAL_E : Keyboard::KEY_E;
+        case 0x66:
+            return caps ? Keyboard::KEY_CAPITAL_F : Keyboard::KEY_F;
+        case 0x67:
+            return caps ? Keyboard::KEY_CAPITAL_G : Keyboard::KEY_G;
+        case 0x68:
+            return caps ? Keyboard::KEY_CAPITAL_H : Keyboard::KEY_H;
+        case 0x69:
+            return caps ? Keyboard::KEY_CAPITAL_I : Keyboard::KEY_I;
+        case 0x6a:
+            return caps ? Keyboard::KEY_CAPITAL_J : Keyboard::KEY_J;
+        case 0x6b:
+            return caps ? Keyboard::KEY_CAPITAL_K : Keyboard::KEY_K;
+        case 0x6c:
+            return caps ? Keyboard::KEY_CAPITAL_L : Keyboard::KEY_L;
+        case 0x6d:
+            return caps ? Keyboard::KEY_CAPITAL_M : Keyboard::KEY_M;
+        case 0x6e:
+            return caps ? Keyboard::KEY_CAPITAL_N : Keyboard::KEY_N;
+        case 0x6f:
+            return caps ? Keyboard::KEY_CAPITAL_O : Keyboard::KEY_O;
+        case 0x70:
+            return caps ? Keyboard::KEY_CAPITAL_P : Keyboard::KEY_P;
+        case 0x71:
+            return caps ? Keyboard::KEY_CAPITAL_Q : Keyboard::KEY_Q;
+        case 0x72:
+            return caps ? Keyboard::KEY_CAPITAL_R : Keyboard::KEY_R;
+        case 0x73:
+            return caps ? Keyboard::KEY_CAPITAL_S : Keyboard::KEY_S;
+        case 0x74:
+            return caps ? Keyboard::KEY_CAPITAL_T : Keyboard::KEY_T;
+        case 0x75:
+            return caps ? Keyboard::KEY_CAPITAL_U : Keyboard::KEY_U;
+        case 0x76:
+            return caps ? Keyboard::KEY_CAPITAL_V : Keyboard::KEY_V;
+        case 0x77:
+            return caps ? Keyboard::KEY_CAPITAL_W : Keyboard::KEY_W;
+        case 0x78:
+            return caps ? Keyboard::KEY_CAPITAL_X : Keyboard::KEY_X;
+        case 0x79:
+            return caps ? Keyboard::KEY_CAPITAL_Y : Keyboard::KEY_Y;
+        case 0x7a:
+            return caps ? Keyboard::KEY_CAPITAL_Z : Keyboard::KEY_Z;
+        default: ;
+            //return Keyboard::KEY_NONE;
+    }// GEOFF added code end
+    
     switch(keyCode)
     {
         case 0x69:
@@ -1303,6 +1421,7 @@ int getKey(unsigned short keyCode, unsigned int modifierFlags)
         case 0x27:
             return __shiftDown ? Keyboard::KEY_QUOTE : Keyboard::KEY_APOSTROPHE;
             
+        /* //GEOFF changed code, we now check the letters first before other characters
         case 0x00:
             return caps ? Keyboard::KEY_CAPITAL_A : Keyboard::KEY_A;
         case 0x0B:
@@ -1355,10 +1474,14 @@ int getKey(unsigned short keyCode, unsigned int modifierFlags)
             return caps ? Keyboard::KEY_CAPITAL_Y : Keyboard::KEY_Y;
         case 0x06:
             return caps ? Keyboard::KEY_CAPITAL_Z : Keyboard::KEY_Z;
-
-        default:
-            return Keyboard::KEY_NONE;
+         */
+        default: ;
+            //return Keyboard::KEY_NONE;
+            
     }
+    
+    
+    return Keyboard::KEY_NONE;
 }
 
 /**
