@@ -1810,8 +1810,9 @@ int Platform::enterMessagePump()
         if (config)
         {
             // Read window title.
-            __title = const_cast<char *>(config->getString("title"));
-
+           // __title = const_cast<char *>(config->getString("title"));
+            // GEOFF CODE CHANGE, just get the title from the Product Name in Build Settings
+            __title = const_cast<char *>([[[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleNameKey] cStringUsingEncoding:NSASCIIStringEncoding]);
             // Read window size.
             int width = config->getInt("width");
             if (width != 0)
