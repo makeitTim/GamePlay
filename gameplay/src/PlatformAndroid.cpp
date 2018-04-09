@@ -1518,20 +1518,37 @@ int Platform::enterMessagePump()
      * should be stored, like /mnt/sdcard/android/<package-name>/files/
      */
     jboolean isCopy;
-
     jclass clazz = env->GetObjectClass(activity->clazz);
+    
+    //GEOFF CODE
+    
+ 
+    //GEOFF CODE CHANGE
     jmethodID methodGetExternalStorage = env->GetMethodID(clazz, "getExternalFilesDir", "(Ljava/lang/String;)Ljava/io/File;");
-
+    // TEST - use internal not external storage - better because all devices have internal storage
+    //jmethodID methodGetExternalStorage = env->GetMethodID(clazz, "getFilesDir", "()Ljava/io/File;");
+    
     jclass clazzFile = env->FindClass("java/io/File");
     jmethodID methodGetPath = env->GetMethodID(clazzFile, "getPath", "()Ljava/lang/String;");
-
     // Now has java.io.File object pointing to directory
     jobject objectFile  = env->CallObjectMethod(activity->clazz, methodGetExternalStorage, NULL);
-    
     // Now has String object containing path to directory
-    jstring stringExternalPath = static_cast<jstring>(env->CallObjectMethod(objectFile, methodGetPath));
-    const char* externalPath = env->GetStringUTFChars(stringExternalPath, &isCopy);
 
+    jstring stringExternalPath;
+    
+    if (objectFile == NULL) {
+            __android_log_print(ANDROID_LOG_INFO, "JNI", "Can't find external dir, use internal instead");
+        
+            jmethodID methodGetStorage = env->GetMethodID(clazz, "getFilesDir", "()Ljava/io/File;");
+            jobject objectFile  = env->CallObjectMethod(activity->clazz, methodGetStorage, NULL);
+            stringExternalPath = static_cast<jstring>(env->CallObjectMethod(objectFile, methodGetPath));
+    } else {
+            __android_log_print(ANDROID_LOG_INFO, "JNI", "Using external files dir");
+
+             stringExternalPath = static_cast<jstring>(env->CallObjectMethod(objectFile, methodGetPath));
+    }
+    const char* externalPath = env->GetStringUTFChars(stringExternalPath, &isCopy);
+    
     // Set the default path to store the resources.
     std::string assetsPath(externalPath);
     if (externalPath[strlen(externalPath)-1] != '/')
